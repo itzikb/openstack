@@ -1,0 +1,31 @@
+- hosts: localhost
+  tasks:
+    - name: Delete instances
+      openstack.cloud.server:
+        state: absent
+        cloud: "{{ cloud }}"
+        name: "{{ item }}"
+        image: "{{ image_name }}"
+    #       key_name: ansible_key
+        timeout: 200
+        flavor: "{{ flavor_name }}"
+        nics:
+          - net-name: "{{ net_name }}"
+      loop: "{{ vms_names }}"
+
+    - name: Delete the IPv6 subnet
+      openstack.cloud.subnet:
+        state: absent
+        name: "{{ subnet_name }}"
+        network_name: "{{ net_name }}"
+        ip_version: '6'
+        cidr: 2001:db8:2222:5555::/64
+        ipv6_ra_mode: 'slaac'
+        ipv6_address_mode: 'slaac'
+
+    - name: Delete the network
+      openstack.cloud.network:
+        cloud: "{{ cloud }}"
+        state: absent
+        name: "{{ net_name }}"
+

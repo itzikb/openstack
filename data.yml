@@ -1,0 +1,8 @@
+cloud: 'shiftstack'
+net_name: 'network1'
+subnet_name: 'network1-subnet-ipv6-1'
+flavor_name: 'rhel'
+image_name: 'rhel'
+vms_names:
+  - vm1
+
