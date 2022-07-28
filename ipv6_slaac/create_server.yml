@@ -94,13 +94,6 @@
       become: yes
       shell: "ip -6 route add {{ subnet_cidr_ipv6 }} via {{ router_external_ipv6 }}"
 
-#    - name: Get VMs IPv6 addresses
-#      openstack.cloud.server_info:
-#        cloud: "{{ cloud }}"
-#        filters:
-#          name: "{{ item }}"
-#      loop: "{{ vms_names }}"
-#
     - name: Get VMs info
       openstack.cloud.server_info:
         server: "{{ vm_prefix }}*"
