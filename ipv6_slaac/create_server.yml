@@ -1,0 +1,122 @@
+- hosts: localhost
+  tasks:
+    - openstack.cloud.keypair:
+        cloud: "{{ cloud }}"
+        state: present
+        name: ansible_key
+        public_key_file: "{{ public_key }}"
+
+    - name: Create a network
+      openstack.cloud.network:
+        cloud: "{{ cloud }}"
+        state: present
+        name: "{{ net_name }}"
+
+    - name: Create an IPv6 subnet
+      openstack.cloud.subnet:
+        state: present
+        name: "{{ subnet_name_ipv6 }}"
+        network_name: "{{ net_name }}"
+        ip_version: '6'
+        cidr: "{{ subnet_cidr_ipv6 }}"
+        ipv6_ra_mode: 'slaac'
+        ipv6_address_mode: 'slaac'
+
+    - name: Create an IPv4 subnet
+      openstack.cloud.subnet:
+        state: present
+        name: "{{ subnet_name_ipv4 }}"
+        network_name: "{{ net_name }}"
+        ip_version: '4'
+        cidr: "{{ subnet_cidr_ipv4 }}"
+
+    - name: Add subnets to Router "{{ router_name }}"
+      shell: "source {{ user_authfile }} && openstack router add subnet {{ router_name }} {{ item }}"
+      loop:
+        - "{{ subnet_name_ipv4 }}"
+        - "{{ subnet_name_ipv6 }}"
+
+    - name: Add security group rule to allow ICMP
+      openstack.cloud.security_group_rule:
+        cloud: "{{ cloud }}"
+        security_group: "{{ sg_name }}"
+        protocol: icmp
+        direction: "{{ item }}"
+      loop:
+        - 'ingress'
+        - 'egress'
+
+    - name: Add security group rule to allow ICMPv6
+      openstack.cloud.security_group_rule:
+        cloud: "{{ cloud }}"
+        security_group: "{{ sg_name }}"
+        protocol: ipv6-icmp
+        ethertype: IPv6
+        direction: "{{ item }}"
+      loop:
+        - 'ingress'
+        - 'egress'
+
+    - name: Add security group rule to allow SSH
+      openstack.cloud.security_group_rule:
+        cloud: "{{ cloud }}"
+        security_group: "{{ sg_name }}"
+        protocol: tcp
+        port_range_min: 22
+        port_range_max: 22
+
+    - name: Create new instances connected to "{{ net_name }}" network
+      openstack.cloud.server:
+        state: present
+        cloud: "{{ cloud }}"
+        name: "{{ vm_prefix }}-{{ item }}"
+        image: "{{ image_name }}"
+        key_name: ansible_key
+        timeout: 200
+        flavor: "{{ flavor_name }}"
+        nics:
+          - net-name: "{{ net_name }}"
+        auto_ip: false
+      with_sequence: count="{{ num_vms }}"
+
+    - name: Get information about {{ router_name }}
+      openstack.cloud.routers_info:
+        cloud: "{{ cloud }}"
+        filters:
+          name: "{{ router_name }}"
+      register: result
+
+    - name: Get the IPv6 address of the external network of the router 
+      set_fact:
+        router_external_ipv6: "{{ result.openstack_routers[0].external_gateway_info.external_fixed_ips | map(attribute='ip_address')| list|ipv6|first }}"
+
+    - name: Add a route to reach the vms on subnet {{ subnet_name_ipv6 }}
+      become: yes
+      shell: "ip -6 route add {{ subnet_cidr_ipv6 }} via {{ router_external_ipv6 }}"
+
+#    - name: Get VMs IPv6 addresses
+#      openstack.cloud.server_info:
+#        cloud: "{{ cloud }}"
+#        filters:
+#          name: "{{ item }}"
+#      loop: "{{ vms_names }}"
+#
+    - name: Get VMs info
+      openstack.cloud.server_info:
+        server: "{{ vm_prefix }}*"
+        cloud: "{{ cloud }}"
+      with_sequence: count="{{ num_vms }}"
+      register: result
+
+    - name: Get VM openstack servers dict
+      set_fact:
+        vms_info: "{{ result.results| map(attribute='openstack_servers')|list }}"
+
+    - name: Check connectivity to the vms
+      shell: ping6 -c 1 -w 5 "{{ item[0].accessIPv6 }}"
+      register: result
+      until: result is not failed
+      retries: 10
+      delay: 10
+      loop: "{{ vms_info }}"
+
