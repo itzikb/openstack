@@ -2,6 +2,8 @@ cloud: 'shiftstack'
 net_name: 'network1'
 public_key: '/home/stack/.ssh/id_rsa.pub'
 user_authfile: '/home/stack/shiftstackrc'
+
+external_network: 'nova'
 subnet_name_ipv4: 'network1-subnet-ipv4-1'
 subnet_cidr_ipv4: '192.168.55.0/24'
 subnet_name_ipv6: 'network1-subnet-ipv6-1'

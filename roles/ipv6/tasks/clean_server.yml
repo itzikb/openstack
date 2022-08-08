@@ -7,12 +7,14 @@
   with_sequence: count="{{ num_vms }}"
 
 
-- name: Remove subnets from Router "{{ router_name }}"
-  shell: "source {{ user_authfile }} && openstack router remove subnet {{ router_name }} {{ item }}"
-  loop:
-    - "{{ subnet_name_ipv4 }}"
-    - "{{ subnet_name_ipv6 }}"
-  ignore_errors: yes
+- openstack.cloud.router:
+    cloud: "{{ cloud }}"
+    state: absent
+    name: "{{ router_name }}"
+    network: "{{ external_network }}"
+    interfaces:
+      - "{{ subnet_name_ipv4 }}"
+      - "{{ subnet_name_ipv6 }}"
 
 - name: Delete the subnets
   openstack.cloud.subnet:

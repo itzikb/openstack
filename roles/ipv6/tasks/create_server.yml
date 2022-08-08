@@ -28,11 +28,14 @@
     ip_version: '4'
     cidr: "{{ subnet_cidr_ipv4 }}"
 
-- name: Add subnets to Router "{{ router_name }}"
-  shell: "source {{ user_authfile }} && openstack router add subnet {{ router_name }} {{ item }}"
-  loop:
-    - "{{ subnet_name_ipv4 }}"
-    - "{{ subnet_name_ipv6 }}"
+- openstack.cloud.router:
+    cloud: "{{ cloud }}"
+    state: present
+    name: "{{ router_name }}"
+    network: "{{ external_network }}"
+    interfaces:
+      - "{{ subnet_name_ipv4 }}"
+      - "{{ subnet_name_ipv6 }}"
 
 - name: Add security group rule to allow ICMP
   openstack.cloud.security_group_rule:
