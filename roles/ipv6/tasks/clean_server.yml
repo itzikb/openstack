@@ -6,8 +6,17 @@
     timeout: 200
   with_sequence: count="{{ num_vms }}"
 
+- name: "Delete {{ flavor_name }} flavor"
+  openstack.cloud.compute_flavor:
+    cloud: "{{ admin_cloud }}"
+    state: absent
+    name: "{{ flavor_name }}"
+    ram: 4096
+    vcpus: 2
+    disk: 10
 
-- openstack.cloud.router:
+- name: "Remove {{ router_name }} router"
+  openstack.cloud.router:
     cloud: "{{ cloud }}"
     state: absent
     name: "{{ router_name }}"

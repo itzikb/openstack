@@ -1,4 +1,5 @@
 cloud: 'shiftstack'
+admin_cloud: 'overcloud'
 net_name: 'network1'
 public_key: '/home/stack/.ssh/id_rsa.pub'
 user_authfile: '/home/stack/shiftstackrc'

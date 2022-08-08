@@ -4,6 +4,15 @@
     name: ansible_key
     public_key_file: "{{ public_key }}"
 
+- name: "Create a {{ flavor_name }} flavor"
+  openstack.cloud.compute_flavor:
+    cloud: "{{ admin_cloud }}"
+    state: present
+    name: "{{ flavor_name }}"
+    ram: 4096
+    vcpus: 2
+    disk: 10
+
 - name: Create a network
   openstack.cloud.network:
     cloud: "{{ cloud }}"
@@ -28,7 +37,8 @@
     ip_version: '4'
     cidr: "{{ subnet_cidr_ipv4 }}"
 
-- openstack.cloud.router:
+- name: "Create {{ router_name }} router "
+  openstack.cloud.router:
     cloud: "{{ cloud }}"
     state: present
     name: "{{ router_name }}"
