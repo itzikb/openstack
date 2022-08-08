@@ -1,0 +1,24 @@
+cloud: 'shiftstack'
+net_name: 'network1'
+public_key: '/home/stack/.ssh/id_rsa.pub'
+user_authfile: '/home/stack/shiftstackrc'
+subnet_name_ipv4: 'network1-subnet-ipv4-1'
+subnet_cidr_ipv4: '192.168.55.0/24'
+subnet_name_ipv6: 'network1-subnet-ipv6-1'
+subnet_cidr_ipv6: '2001:db8:2222:5555::/64'
+subnet_cidr_ipv6_prefix: '2001:db8:2222:5555'
+subnet_cidr_ipv6_mask: '64'
+ipv6_ra_mode: 'slaac'
+ipv6_address_mode: 'slaac'
+
+sg_name: 'default'
+router_name: 'router1'
+flavor_name: 'rhel'
+image_url: 'https://download.fedoraproject.org/pub/fedora/linux/releases/36/Cloud/x86_64/images/Fedora-Cloud-Base-36-1.5.x86_64.qcow2'
+image_name: 'rhel'
+image_path: '/tmp/rhel.qcow2'
+vm_prefix: 'vm'
+num_vms: 2
+
+create: true
+clean: false
