@@ -1,79 +1,80 @@
-- name: Delete instances
-  openstack.cloud.server:
-    state: absent
-    cloud: "{{ cloud }}"
-    name: "{{vm_prefix}}-{{ item }}"
-    timeout: 200
-  with_sequence: count="{{ num_vms }}"
+- block:
+    - name: Delete instances
+      openstack.cloud.server:
+        state: absent
+        cloud: "{{ cloud }}"
+        name: "{{vm_prefix}}-{{ item }}"
+        timeout: 200
+      with_sequence: count="{{ num_vms }}"
 
-- name: "Delete {{ flavor_name }} flavor"
-  openstack.cloud.compute_flavor:
-    cloud: "{{ admin_cloud }}"
-    state: absent
-    name: "{{ flavor_name }}"
-    ram: 4096
-    vcpus: 2
-    disk: 10
+    - name: "Delete {{ flavor_name }} flavor"
+      openstack.cloud.compute_flavor:
+        cloud: "{{ admin_cloud }}"
+        state: absent
+        name: "{{ flavor_name }}"
+        ram: 4096
+        vcpus: 2
+        disk: 10
 
-- name: "Remove {{ router_name }} router"
-  openstack.cloud.router:
-    cloud: "{{ cloud }}"
-    state: absent
-    name: "{{ router_name }}"
-    network: "{{ external_network }}"
-    interfaces:
-      - "{{ subnet_name_ipv4 }}"
-      - "{{ subnet_name_ipv6 }}"
+    - name: "Remove {{ router_name }} router"
+      openstack.cloud.router:
+        cloud: "{{ cloud }}"
+        state: absent
+        name: "{{ router_name }}"
+        network: "{{ external_network }}"
+        interfaces:
+          - "{{ subnet_name_ipv4 }}"
+          - "{{ subnet_name_ipv6 }}"
 
-- name: Delete the subnets
-  openstack.cloud.subnet:
-    state: absent
-    name: "{{ item }}"
-    network_name: "{{ net_name }}"
-  loop:
-    - "{{ subnet_name_ipv4 }}"
-    - "{{ subnet_name_ipv6 }}"
+    - name: Delete the subnets
+      openstack.cloud.subnet:
+        state: absent
+        name: "{{ item }}"
+        network_name: "{{ net_name }}"
+      loop:
+        - "{{ subnet_name_ipv4 }}"
+        - "{{ subnet_name_ipv6 }}"
 
-- name: Delete the network
-  openstack.cloud.network:
-    cloud: "{{ cloud }}"
-    state: absent
-    name: "{{ net_name }}"
+    - name: Delete the network
+      openstack.cloud.network:
+        cloud: "{{ cloud }}"
+        state: absent
+        name: "{{ net_name }}"
 
+    - name: Remove security group rule to allow ICMP
+      openstack.cloud.security_group_rule:
+        state: absent
+        cloud: "{{ cloud }}"
+        security_group: "{{ sg_name }}"
+        protocol: icmp
+        direction: "{{ item }}"
+      loop:
+        - 'ingress'
+        - 'egress'
 
-- name: Remove security group rule to allow ICMP
-  openstack.cloud.security_group_rule:
-    state: absent
-    cloud: "{{ cloud }}"
-    security_group: "{{ sg_name }}"
-    protocol: icmp
-    direction: "{{ item }}"
-  loop:
-    - 'ingress'
-    - 'egress'
+    - name: Remove security group rule to allow ICMPv6
+      openstack.cloud.security_group_rule:
+        state: absent
+        cloud: "{{ cloud }}"
+        security_group: "{{ sg_name }}"
+        protocol: ipv6-icmp
+        ethertype: IPv6
+        direction: "{{ item }}"
+      loop:
+        - 'ingress'
+        - 'egress'
 
-- name: Remove security group rule to allow ICMPv6
-  openstack.cloud.security_group_rule:
-    state: absent
-    cloud: "{{ cloud }}"
-    security_group: "{{ sg_name }}"
-    protocol: ipv6-icmp
-    ethertype: IPv6
-    direction: "{{ item }}"
-  loop: 
-    - 'ingress'
-    - 'egress'
+    - name: Remove security group rule to allow SSH
+      openstack.cloud.security_group_rule:
+        state: absent
+        cloud: "{{ cloud }}"
+        security_group: "{{ sg_name }}"
+        protocol: tcp
+        port_range_min: 22
 
-- name: Remove security group rule to allow SSH
-  openstack.cloud.security_group_rule:
-    state: absent
-    cloud: "{{ cloud }}"
-    security_group: "{{ sg_name }}"
-    protocol: tcp
-    port_range_min: 22
-
-- name: Remove the route to reach the vms on subnet {{ subnet_name_ipv6 }}
-  shell: "ip -6 route delete {{ subnet_cidr_ipv6 }}"
-  become: yes
-  ignore_errors: true
+    - name: Remove the route to reach the vms on subnet {{ subnet_name_ipv6 }}
+      shell: "ip -6 route delete {{ subnet_cidr_ipv6 }}"
+      become: yes
+      ignore_errors: true
+  tags: clean
 

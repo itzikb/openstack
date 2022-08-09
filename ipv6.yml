@@ -3,11 +3,10 @@
     - include_role:
         name: ipv6
         tasks_from: create_server.yml
-      when: create
+      tags: create
 
     - include_role:
         name: ipv6
         tasks_from: clean_server.yml
-      when: clean
-
+      tags: clean
     
