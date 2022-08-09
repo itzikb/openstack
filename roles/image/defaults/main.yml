@@ -1,0 +1,4 @@
+image_url: 'https://download.fedoraproject.org/pub/fedora/linux/releases/36/Cloud/x86_64/images/Fedora-Cloud-Base-36-1.5.x86_64.qcow2'
+image_name: 'fedora'
+image_path: '/tmp/image.qcow2'
+image_root_passwd: '123456'

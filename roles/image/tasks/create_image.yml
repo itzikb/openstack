@@ -1,0 +1,22 @@
+- name: Get an image
+  get_url:
+    url: "{{ image_url }}"
+    dest: "{{ image_path }}"
+
+- name: Allow root access
+  shell: "virt-edit -a {{ image_path }} -e 's/^disable_root: 1/disable_root: 0/' /etc/cloud/cloud.cfg"
+
+- name: Allow root SSH access
+  shell: "virt-edit -a {{ image_path }} -e 's/^ssh_pwauth:\\s+0/ssh_pwauth: 1/' /etc/cloud/cloud.cfg"
+
+- name: Set image root password
+  shell: "virt-customize -a {{ image_path }} --root-password password:{{ image_root_passwd }}"
+
+- name: Upload the image to Glance
+  openstack.cloud.image:
+    cloud: "{{ cloud }}"
+    name: "{{ image_name }}"
+    container_format: bare
+    disk_format: "qcow2"
+    state: present
+    filename: "{{ image_path }}"
