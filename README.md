@@ -15,3 +15,5 @@ To remove the resources creae by this scenario:
 ```
 $ ansible-playbook ipv6.yml --tags clean
 ```
+
+Please look at the [defaults](https://github.com/itzikb/openstack/blob/main/roles/ipv6/defaults/main.yml) to know which values to change  
